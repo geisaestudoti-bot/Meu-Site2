@@ -1,0 +1,481 @@
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ESP32-CAM Sistema de Automação</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<style>
+    body {
+        background-color: #f8f9fa;
+    }
+    .header {
+        background-color: #1b5e20; /* verde escuro */
+        color: white;
+        padding: 10px 0; /* tamanho médio */
+        margin-bottom: 20px;
+    }
+    .brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    .brand-title {
+        font-size: 1.4rem; /* médio */
+        font-weight: 600;
+        margin: 0;
+    }
+    .brand-leaf {
+        font-size: 1.2rem;
+        line-height: 1;
+    }
+    .brand-logo {
+        height: 44px; /* médio */
+    }
+    .card {
+        margin-bottom: 20px;
+        border-radius: 10px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    .card-title {
+        font-weight: bold;
+        margin-bottom: 15px;
+    }
+    .camera-container {
+        background-color: #f0f0f0;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        height: 300px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 15px;
+    }
+    .camera-placeholder {
+        color: #666;
+        text-align: center;
+    }
+    .form-switch .form-check-input {
+        width: 3em;
+        height: 1.5em;
+    }
+    .form-range {
+        height: 1.5rem;
+    }
+    .control-label {
+        font-weight: bold;
+        margin-bottom: 5px;
+    }
+    .status-indicator {
+        font-weight: normal;
+        margin-left: 10px;
+    }
+    .btn-primary {
+        background-color: #1b5e20;
+        border-color: #1b5e20;
+    }
+    .btn-primary:hover {
+        background-color: #2e7d32;
+        border-color: #2e7d32;
+    }
+    .btn-primary:focus, .btn-primary.focus {
+        background-color: #2e7d32;
+        border-color: #2e7d32;
+        box-shadow: 0 0 0 0.2rem rgba(27, 94, 32, 0.5);
+    }
+    .btn-primary:active, .btn-primary.active {
+        background-color: #1b5e20;
+        border-color: #1b5e20;
+    }
+</style>
+</head>
+<body>
+<div class="header">
+    <div class="container brand">
+        <span class="brand-leaf">🌿</span>
+        <h2 class="brand-title">Estufa Online</h2>
+        <span class="brand-leaf">🌿</span>
+        <!-- Se desejar usar imagem, coloque logo.png na raiz e descomente abaixo -->
+        <!-- <img src="logo.png" alt="Logo" class="brand-logo"> -->
+    </div>
+</div>
+
+<div class="container">
+    <div class="row">
+        <!-- Coluna da Câmera -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h2 class="card-title">Câmera</h2>
+                    <div class="camera-container" id="cameraStream">
+                        <div class="camera-placeholder">
+                            <p>Stream da Câmera</p>
+                            <p><small>Carregando...</small></p>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <button class="btn btn-primary" id="btnCapturarFoto">Capturar Foto</button>
+                        <button class="btn btn-primary" id="btnAtualizarStream">Atualizar Stream</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Coluna dos Controles -->
+        <div class="col-md-6">
+            <!-- Controle da Lâmpada -->
+            <div class="card">
+                <div class="card-body">
+                    <h2 class="card-title">Controle da Lâmpada</h2>
+                    <div class="form-check form-switch mb-3">
+                        <input class="form-check-input" type="checkbox" id="switchLampada">
+                        <label class="form-check-label" for="switchLampada">
+                            <span class="control-label">Estado:</span>
+                            <span class="status-indicator" id="estadoLampada">Desligada</span>
+                        </label>
+                    </div>
+                    <div class="mb-3">
+                        <label for="temporizadorLampada" class="form-label">Temporizador (segundos):</label>
+                        <div class="d-flex align-items-center">
+                            <input type="number" class="form-control me-2" id="temporizadorLampada" min="0" max="300" value="59">
+                            <button class="btn btn-primary" id="btnAplicarTemporizador">Aplicar</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Controle da Lampada-calor -->
+            <div class="card">
+                <div class="card-body">
+                    <h2 class="card-title"> Controle da Lampada de Calor</h2>
+                    <div class="form-check form-switch mb-3">
+                        <input class="form-check-input" type="checkbox" id="switchLampadaCalor">
+                        <label class="form-check-label" for="switchLampadaCalor">
+                            <span class="control-label">Estado:</span>
+                            <span class="status-indicator" id="estadoLampadaCalor">Desligada</span>
+                        </label>
+                    </div>
+                    <div class="mb-3">
+                        <label for="temporizadorLampadaCalor" class="form-label">Temporizador (segundos):</label>
+                        <div class="d-flex align-items-center">
+                            <input type="number" class="form-control me-2" id="temporizadorLampadaCalor" min="0" max="300" value="59">
+                            <button class="btn btn-primary" id="btnAplicarTemporizadorLampadaCalor">Aplicar</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Controle do Cooler de Ventilação -->
+            <div class="card">
+                <div class="card-body">
+                    <h2 class="card-title">Cooler de Ventilação</h2>
+                    <div class="form-check form-switch mb-3">
+                        <input class="form-check-input" type="checkbox" id="switchCooler">
+                        <label class="form-check-label" for="switchCooler">
+                            <span class="control-label">Estado:</span>
+                            <span class="status-indicator" id="estadoCooler">Desligado</span>
+                        </label>
+                    </div>
+                    <div class="mb-3">
+                        <label for="temporizadorCooler" class="form-label">Temporizador (segundos):</label>
+                        <div class="d-flex align-items-center">
+                            <input type="number" class="form-control me-2" id="temporizadorCooler" min="0" max="300" value="59">
+                            <button class="btn btn-primary" id="btnAplicarTemporizadorCooler">Aplicar</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Controle da Bomba -->
+            <div class="card">
+                <div class="card-body">
+                    <h2 class="card-title">Controle da Bomba</h2>
+                    <div class="mb-2">
+                        <span class="control-label">Estado:</span>
+                        <span class="status-indicator" id="estadoBomba">Desligada</span>
+                    </div>
+                    <div class="mb-3">
+                        <label for="limiarUmidade" class="form-label">Limiar de Umidade:</label>
+                        <div class="d-flex align-items-center">
+                            <input type="range" class="form-range me-2" id="limiarUmidade" min="0" max="100" value="0">
+                            <span id="valorLimiarUmidade">0</span>
+                            <button class="btn btn-primary ms-2" id="btnAplicarLimiar">Aplicar</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Controle da Temperatura -->
+            <div class="card">
+                <div class="card-body">
+                    <h2 class="card-title">Controle da Temperatura</h2>
+                    <div class="mb-2">
+                        <span class="control-label">Estado:</span>
+                        <span class="status-indicator" id="estadoTemperatura">Desligada</span>
+                    </div>
+                    <div class="mb-3">
+                        <label for="limiarTemperatura" class="form-label">Limiar de Temperatura (°C):</label>
+                        <div class="d-flex align-items-center">
+                            <input type="range" class="form-range me-2" id="limiarTemperatura" min="0" max="60" value="25">
+                            <span id="valorLimiarTemperatura">25</span>
+                            <button class="btn btn-primary ms-2" id="btnAplicarLimiarTemperatura">Aplicar</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Controle de Umidade do Solo -->
+            <div class="card">
+                <div class="card-body">
+                    <h2 class="card-title">Umidade do Solo</h2>
+                    <div class="mb-2">
+                        <span class="control-label">Estado:</span>
+                        <span class="status-indicator" id="estadoUmidadeSolo">Desligada</span>
+                    </div>
+                    <div class="mb-3">
+                        <label for="limiarUmidadeSolo" class="form-label">Limiar de Umidade do Solo (%):</label>
+                        <div class="d-flex align-items-center">
+                            <input type="range" class="form-range me-2" id="limiarUmidadeSolo" min="0" max="100" value="50">
+                            <span id="valorLimiarUmidadeSolo">50</span>
+                            <button class="btn btn-primary ms-2" id="btnAplicarLimiarUmidadeSolo">Aplicar</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Elementos da interface
+    const switchLampada = document.getElementById('switchLampada');
+    const estadoLampada = document.getElementById('estadoLampada');
+    const temporizadorLampada = document.getElementById('temporizadorLampada');
+    const btnAplicarTemporizador = document.getElementById('btnAplicarTemporizador');
+    const estadoBomba = document.getElementById('estadoBomba');
+    const limiarUmidade = document.getElementById('limiarUmidade');
+    const valorLimiarUmidade = document.getElementById('valorLimiarUmidade');
+    const btnAplicarLimiar = document.getElementById('btnAplicarLimiar');
+    const btnCapturarFoto = document.getElementById('btnCapturarFoto');
+    const btnAtualizarStream = document.getElementById('btnAtualizarStream');
+    const cameraStream = document.getElementById('cameraStream');
+
+    // Novos elementos: Temperatura e Umidade do Solo
+    const estadoTemperatura = document.getElementById('estadoTemperatura');
+    const limiarTemperatura = document.getElementById('limiarTemperatura');
+    const valorLimiarTemperatura = document.getElementById('valorLimiarTemperatura');
+    const btnAplicarLimiarTemperatura = document.getElementById('btnAplicarLimiarTemperatura');
+
+    const estadoUmidadeSolo = document.getElementById('estadoUmidadeSolo');
+    const limiarUmidadeSolo = document.getElementById('limiarUmidadeSolo');
+    const valorLimiarUmidadeSolo = document.getElementById('valorLimiarUmidadeSolo');
+    const btnAplicarLimiarUmidadeSolo = document.getElementById('btnAplicarLimiarUmidadeSolo');
+
+    // Novos elementos: Lampada-calor e Cooler
+    const switchLampadaCalor = document.getElementById('switchLampadaCalor');
+    const estadoLampadaCalor = document.getElementById('estadoLampadaCalor');
+    const temporizadorLampadaCalor = document.getElementById('temporizadorLampadaCalor');
+    const btnAplicarTemporizadorLampadaCalor = document.getElementById('btnAplicarTemporizadorLampadaCalor');
+
+    const switchCooler = document.getElementById('switchCooler');
+    const estadoCooler = document.getElementById('estadoCooler');
+    const temporizadorCooler = document.getElementById('temporizadorCooler');
+    const btnAplicarTemporizadorCooler = document.getElementById('btnAplicarTemporizadorCooler');
+
+    // Estado inicial
+    let lampadaLigada = false;
+    let bombaLigada = false;
+    let valorTemporizador = 59;
+    let valorUmidade = 0;
+    let valorTemperatura = 25;
+    let valorUmidadeSolo = 50;
+
+    // Atualiza o valor do limiar de umidade ao mover o slider
+    limiarUmidade.addEventListener('input', function() {
+        valorLimiarUmidade.textContent = this.value;
+    });
+
+    // Atualiza os novos sliders
+    limiarTemperatura.addEventListener('input', function() {
+        valorLimiarTemperatura.textContent = this.value;
+    });
+    limiarUmidadeSolo.addEventListener('input', function() {
+        valorLimiarUmidadeSolo.textContent = this.value;
+    });
+
+    // Controle da lâmpada
+    switchLampada.addEventListener('change', function() {
+        lampadaLigada = this.checked;
+        atualizarEstadoLampada();
+        enviarComando(lampadaLigada ? 'lampada/ligar' : 'lampada/desligar');
+    });
+
+    // Aplicar temporizador
+    btnAplicarTemporizador.addEventListener('click', function() {
+        valorTemporizador = parseInt(temporizadorLampada.value);
+        enviarComando('lampada/temporizador', { segundos: valorTemporizador });
+        alert(`Temporizador definido para ${valorTemporizador} segundos`);
+    });
+
+    // Aplicar limiar de umidade
+    btnAplicarLimiar.addEventListener('click', function() {
+        valorUmidade = parseInt(limiarUmidade.value);
+        enviarComando('bomba/limiar', { umidade: valorUmidade });
+        alert(`Limiar de umidade definido para ${valorUmidade}%`);
+    });
+
+    // Aplicar limiar de temperatura (novo card)
+    btnAplicarLimiarTemperatura.addEventListener('click', function() {
+        valorTemperatura = parseInt(limiarTemperatura.value);
+        enviarComando('temperatura/limiar', { temperatura: valorTemperatura });
+        atualizarEstadoTemperatura();
+        alert(`Limiar de temperatura definido para ${valorTemperatura}°C`);
+    });
+
+    // Aplicar limiar de umidade do solo (novo card)
+    btnAplicarLimiarUmidadeSolo.addEventListener('click', function() {
+        valorUmidadeSolo = parseInt(limiarUmidadeSolo.value);
+        enviarComando('solo/limiar', { umidadeSolo: valorUmidadeSolo });
+        atualizarEstadoUmidadeSolo();
+        alert(`Limiar de umidade do solo definido para ${valorUmidadeSolo}%`);
+    });
+
+    // Capturar foto
+    btnCapturarFoto.addEventListener('click', function() {
+        alert('Capturando foto...');
+        enviarComando('camera/capturar');
+    });
+
+    // Atualizar stream
+    btnAtualizarStream.addEventListener('click', function() {
+        alert('Atualizando stream da câmera...');
+        atualizarStreamCamera();
+    });
+
+    // Função para atualizar o estado visual da lâmpada
+    function atualizarEstadoLampada() {
+        estadoLampada.textContent = lampadaLigada ? 'Ligada' : 'Desligada';
+    }
+
+    // Função para atualizar o estado visual da bomba
+    function atualizarEstadoBomba() {
+        estadoBomba.textContent = bombaLigada ? 'Ligada' : 'Desligada';
+    }
+
+    // Função para atualizar o estado visual da temperatura (novo card)
+    function atualizarEstadoTemperatura() {
+        const valor = parseInt(limiarTemperatura.value, 10);
+        estadoTemperatura.textContent = isNaN(valor) ? 'Desligada' : 'Configurado';
+    }
+
+    // Função para atualizar o estado visual da umidade do solo (novo card)
+    function atualizarEstadoUmidadeSolo() {
+        const valor = parseInt(limiarUmidadeSolo.value, 10);
+        estadoUmidadeSolo.textContent = isNaN(valor) ? 'Desligada' : 'Configurado';
+    }
+
+    // Função para atualizar o stream da câmera
+    function atualizarStreamCamera() {
+        // Simulação de atualização do stream
+        cameraStream.innerHTML = `
+            <div class="camera-placeholder">
+                <p>Stream da Câmera</p>
+                <p><small>Atualizado em ${new Date().toLocaleTimeString()}</small></p>
+            </div>
+        `;
+
+        // Em um sistema real, você atualizaria a imagem da câmera aqui
+        // Por exemplo:
+        // cameraStream.innerHTML = `<img src="http://endereço-do-esp32-cam/stream?t=${Date.now()}" alt="Stream da Câmera">`;
+    }
+
+    // Função para enviar comandos para o ESP32
+    async function enviarComando(endpoint, dados = {}) {
+        try {
+            console.log(`Enviando comando para ${endpoint}`, dados);
+
+            // Em um sistema real, você enviaria uma requisição para o ESP32
+            // Por exemplo:
+            /*
+            const response = await fetch(`http://endereço-do-esp32/${endpoint}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(dados)
+            });
+
+            if (response.ok) {
+                const resultado = await response.json();
+                console.log('Resposta:', resultado);
+                return resultado;
+            } else {
+                console.error('Erro na requisição:', response.status);
+            }
+            */
+
+            // Simulação de resposta
+            return { sucesso: true };
+        } catch (erro) {
+            console.error('Erro ao enviar comando:', erro);
+        }
+    }
+
+    // Função para obter o estado atual do sistema
+    async function obterEstadoSistema() {
+        try {
+            // Em um sistema real, você obteria o estado do ESP32
+            // Por exemplo:
+            /*
+            const response = await fetch('http://endereço-do-esp32/estado');
+            if (response.ok) {
+                const estado = await response.json();
+                lampadaLigada = estado.lampada;
+                bombaLigada = estado.bomba;
+                valorTemporizador = estado.temporizador;
+                valorUmidade = estado.umidade;
+
+                // Atualizar interface
+                switchLampada.checked = lampadaLigada;
+                atualizarEstadoLampada();
+                atualizarEstadoBomba();
+                temporizadorLampada.value = valorTemporizador;
+                limiarUmidade.value = valorUmidade;
+                valorLimiarUmidade.textContent = valorUmidade;
+            }
+            */
+
+            // Simulação de estado inicial
+            lampadaLigada = false;
+            bombaLigada = false;
+            valorTemporizador = 59;
+            valorUmidade = 0;
+            valorTemperatura = 25;
+            valorUmidadeSolo = 50;
+
+            // Atualizar interface
+            switchLampada.checked = lampadaLigada;
+            atualizarEstadoLampada();
+            atualizarEstadoBomba();
+            atualizarEstadoTemperatura();
+            atualizarEstadoUmidadeSolo();
+            temporizadorLampada.value = valorTemporizador;
+            limiarUmidade.value = valorUmidade;
+            valorLimiarUmidade.textContent = valorUmidade;
+            limiarTemperatura.value = valorTemperatura;
+            valorLimiarTemperatura.textContent = valorTemperatura;
+            limiarUmidadeSolo.value = valorUmidadeSolo;
+            valorLimiarUmidadeSolo.textContent = valorUmidadeSolo;
+        } catch (erro) {
+            console.error('Erro ao obter estado do sistema:', erro);
+        }
+    }
+
+    // Inicialização
+    window.addEventListener('load', function() {
+        obterEstadoSistema();
+        atualizarStreamCamera();
+
+        // Atualizar stream a cada 10 segundos
+        setInterval(atualizarStreamCamera, 10000);
+    });
+</script>
+</body>
+</html>
